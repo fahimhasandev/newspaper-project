@@ -1,29 +1,43 @@
-import React, { useContext } from "react"
-import { Link } from "react-router-dom"
+import React, { useContext, useState } from "react"
+import { Link, Navigate } from "react-router-dom"
 import { AuthContext } from "../provider/AuthProvider"
 
 const Register = () => {
-  const { user, setUser, createNewUser } = useContext(AuthContext)
+  const { user, setUser, createNewUser, updateUserProfile } = useContext(AuthContext)
+  const [error, setError] = useState({})
 
   const handleRegister = e => {
     e.preventDefault()
 
     const form = new FormData(e.target)
     const name = form.get("name")
+
+    if (name.length < 5) {
+      setError({ ...error, name: "Must be more than 5 character long" })
+    }
+
     const photoUrl = form.get("photoUrl")
     const email = form.get("email")
     const password = form.get("password")
 
-    console.log(name, photoUrl, email, password)
+    // console.log(name, photoUrl, email, password)
 
     createNewUser(email, password)
       .then(result => {
         const user = result.user
-        console.log(user)
+        setUser(user)
+        updateUserProfile({ displayName: name, photoURL: photoUrl })
+          .then(() => {
+            Navigate("/")
+          })
+          .catch(error => {
+            error.code
+            error.message
+          })
       })
       .catch(error => {
-        console.log(error.code)
-        console.log(error.message)
+        error.code
+        error.message
       })
   }
   return (
@@ -37,6 +51,11 @@ const Register = () => {
             </label>
             <input type="text" placeholder="Enter your name" className="input input-bordered" name="name" required />
           </div>
+          {error.name && (
+            <label className="label">
+              <span className="label-text text-xs text-rose-500">{error.name}</span>
+            </label>
+          )}
           <div className="form-control">
             <label className="label">
               <span className="label-text">Photo URL</span>
